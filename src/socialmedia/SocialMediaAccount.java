@@ -6,11 +6,11 @@ public class SocialMediaAccount {
   private int id;
   private String handle;
 
-  public SocialMediaAccount(String handle) throws IllegalHandleException {
+  public SocialMediaAccount(String handle) throws InvalidHandleException {
     if (handle.length() > 30 || handle.isBlank() || handle.contains(" ")) {
-      throw new IllegalHandleException();
+      throw new InvalidHandleException();
     }
-    
+
     this.handle = handle;
     this.id = ++count;
   }
