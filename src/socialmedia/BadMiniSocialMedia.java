@@ -1,6 +1,7 @@
 package socialmedia;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * BadMiniSocialMedia is a minimally compiling, but non-functioning implementor
@@ -11,15 +12,30 @@ import java.io.IOException;
  */
 public class BadMiniSocialMedia implements MiniSocialMediaPlatform {
 
+	private ArrayList<SocialMediaAccount> accounts = new ArrayList<>();
+
 	@Override
 	public int createAccount(String handle) throws IllegalHandleException, InvalidHandleException {
-		// TODO Auto-generated method stub
-		return 0;
+		SocialMediaAccount account = new SocialMediaAccount(handle);
+		accounts.add(account);
+		return account.getId();
 	}
 
 	@Override
 	public void removeAccount(int id) throws AccountIDNotRecognisedException {
-		// TODO Auto-generated method stub
+		SocialMediaAccount account = null;
+
+		for (SocialMediaAccount currentAccount:accounts) {
+			if (currentAccount.getId() == id) {
+				account = currentAccount;
+			}
+		}
+
+		if (account != null) {
+			accounts.remove(account);
+		} else {
+			throw new AccountIDNotRecognisedException();
+		}
 
 	}
 
