@@ -13,9 +13,16 @@ import java.util.ArrayList;
 public class BadMiniSocialMedia implements MiniSocialMediaPlatform {
 
 	private ArrayList<SocialMediaAccount> accounts = new ArrayList<>();
+	private ArrayList<SocialMediaPost> posts = new ArrayList<>();
 
 	@Override
 	public int createAccount(String handle) throws IllegalHandleException, InvalidHandleException {
+		for (SocialMediaAccount currentAccount:accounts) {
+			if (currentAccount.getHandle().equals(handle)) {
+				throw new IllegalHandleException();
+			}
+		}
+
 		SocialMediaAccount account = new SocialMediaAccount(handle);
 		accounts.add(account);
 		return account.getId();
@@ -42,20 +49,59 @@ public class BadMiniSocialMedia implements MiniSocialMediaPlatform {
 	@Override
 	public void changeAccountHandle(String oldHandle, String newHandle)
 			throws HandleNotRecognisedException, IllegalHandleException, InvalidHandleException {
-		// TODO Auto-generated method stub
+		SocialMediaAccount account = null;
+
+		for (SocialMediaAccount currentAccount:accounts) {
+			if (currentAccount.getHandle().equals(oldHandle)) {
+				account = currentAccount;
+			}
+		}
+
+		if (account != null) {
+			account.setHandle(newHandle);
+		} else {
+			throw new HandleNotRecognisedException();
+		}
 
 	}
 
 	@Override
 	public String showAccount(String handle) throws HandleNotRecognisedException {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuilder builder = new StringBuilder();
+		SocialMediaAccount account = null;
+
+		for (SocialMediaAccount currentAccount:accounts) {
+			if (currentAccount.getHandle().equals(handle)) {
+				account = currentAccount;
+			}
+		}
+
+		if (account != null) {
+			builder.append("ID: " + account.getId());
+			builder.append("Handle: " + account.getHandle());
+		} else {
+			throw new HandleNotRecognisedException();
+		}
+		return builder.toString();
 	}
 
 	@Override
 	public int createPost(String handle, String message) throws HandleNotRecognisedException, InvalidPostException {
-		// TODO Auto-generated method stub
-		return 0;
+		SocialMediaAccount account = null;
+
+		for (SocialMediaAccount currentAccount:accounts) {
+			if (currentAccount.getHandle().equals(handle)) {
+				account = currentAccount;
+			}
+		}
+
+		if (account != null) {
+			SocialMediaPost post = new SocialMediaPost(account, message);
+			posts.add(post);
+			return post.getId();
+		} else {
+			throw new HandleNotRecognisedException();
+		}
 	}
 
 	@Override
