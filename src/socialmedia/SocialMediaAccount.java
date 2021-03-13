@@ -7,7 +7,8 @@ public class SocialMediaAccount {
   private static int count = 0;
   private int id;
   private String handle;
-  private ArrayList<SocialMediaPost> posts;
+  private ArrayList<SocialMediaPost> posts =  new ArrayList<>();
+  private ArrayList<SocialMediaPost> endorsedPosts =  new ArrayList<>();
 
   public SocialMediaAccount(String handle) throws InvalidHandleException {
     if (handle.length() > 30 || handle.isBlank() || handle.contains(" ")) {
@@ -30,6 +31,10 @@ public class SocialMediaAccount {
     return posts;
   }
 
+  public ArrayList<SocialMediaPost> getEndorsedPosts() {
+    return endorsedPosts;
+  }
+
   public void setId(int id) {
     this.id = id;
   }
@@ -43,5 +48,9 @@ public class SocialMediaAccount {
 
   public void setPosts(ArrayList<SocialMediaPost> posts) {
     this.posts = posts;
+  }
+
+  public void setEndorsedPosts(ArrayList<SocialMediaPost> endorsedPosts) {
+    this.endorsedPosts = endorsedPosts;
   }
 }

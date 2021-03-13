@@ -1,6 +1,10 @@
 package socialmedia;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 /**
@@ -39,11 +43,10 @@ public class BadMiniSocialMedia implements MiniSocialMediaPlatform {
 		}
 
 		if (account != null) {
-			accounts.remove(account);
-		} else {
 			throw new AccountIDNotRecognisedException();
 		}
 
+		accounts.remove(account);
 	}
 
 	@Override
@@ -57,12 +60,11 @@ public class BadMiniSocialMedia implements MiniSocialMediaPlatform {
 			}
 		}
 
-		if (account != null) {
-			account.setHandle(newHandle);
-		} else {
+		if (account == null) {
 			throw new HandleNotRecognisedException();
 		}
 
+		account.setHandle(newHandle);
 	}
 
 	@Override
@@ -76,12 +78,14 @@ public class BadMiniSocialMedia implements MiniSocialMediaPlatform {
 			}
 		}
 
-		if (account != null) {
-			builder.append("ID: " + account.getId());
-			builder.append("Handle: " + account.getHandle());
-		} else {
+		if (account == null) {
 			throw new HandleNotRecognisedException();
 		}
+			
+		builder.append("ID: " + account.getId());
+		builder.append("Handle: " + account.getHandle());
+		
+		
 		return builder.toString();
 	}
 
@@ -95,76 +99,208 @@ public class BadMiniSocialMedia implements MiniSocialMediaPlatform {
 			}
 		}
 
-		if (account != null) {
-			SocialMediaPost post = new SocialMediaPost(account, message);
-			posts.add(post);
-			return post.getId();
-		} else {
+		if (account == null) {
 			throw new HandleNotRecognisedException();
 		}
+		
+		SocialMediaPost post = new SocialMediaPost(account, message);
+		posts.add(post);
+		account.getPosts().add(post);
+
+		return post.getId();
 	}
 
 	@Override
 	public int endorsePost(String handle, int id)
 			throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		SocialMediaAccount account = null;
+		SocialMediaPost post = null;
+
+		for (SocialMediaAccount currentAccount:accounts) {
+			if (currentAccount.getHandle().equals(handle)) {
+				account = currentAccount;
+			}
+		}
+
+		for (SocialMediaPost currentPost:posts) {
+			if (currentPost.getId() == id) {
+				post = currentPost;
+			}
+		}
+
+		if (account == null) {
+			throw new HandleNotRecognisedException();
+		}
+
+		if (post == null) {
+			throw new PostIDNotRecognisedException();
+		}
+
+		if (Boolean.TRUE.equals(post.getEndorsed())) {
+			throw new NotActionablePostException();
+		}
+
+		String message = "EP@" + account.getHandle() + ": " + post.getMessage();
+		SocialMediaPost endorsedPost = new SocialMediaPost(account, message);
+
+		post.getEndorsements().add(endorsedPost);
+		posts.add(endorsedPost);
+		account.getPosts().add(endorsedPost);
+		account.getEndorsedPosts().add(endorsedPost);
+
+		return endorsedPost.getId();
 	}
 
 	@Override
 	public int commentPost(String handle, int id, String message) throws HandleNotRecognisedException,
 			PostIDNotRecognisedException, NotActionablePostException, InvalidPostException {
-		// TODO Auto-generated method stub
-		return 0;
+		
+	  SocialMediaAccount account = null;
+		SocialMediaPost post = null;
+
+		for (SocialMediaAccount currentAccount:accounts) {
+			if (currentAccount.getHandle().equals(handle)) {
+				account = currentAccount;
+			}
+		}
+
+		for (SocialMediaPost currentPost:posts) {
+			if (currentPost.getId() == id) {
+				post = currentPost;
+			}
+		}
+
+		if (account == null) {
+			throw new HandleNotRecognisedException();
+		}
+
+		if (post == null) {
+			throw new PostIDNotRecognisedException();
+		}
+
+		if (Boolean.TRUE.equals(post.getEndorsed())) {
+			throw new NotActionablePostException();
+		}
+
+		SocialMediaPost comment = new SocialMediaPost(account, message);
+		posts.add(comment);
+		post.getComments().add(comment);
+		comment.setParent(post);
+
+		return comment.getId();
 	}
 
 	@Override
 	public void deletePost(int id) throws PostIDNotRecognisedException {
-		// TODO Auto-generated method stub
+		SocialMediaPost post = null;
 
+		for (SocialMediaPost currentPost:posts) {
+			if (currentPost.getId() == id) {
+				post = currentPost;
+			}
+		}
+
+		if (post == null) {
+			throw new PostIDNotRecognisedException();
+		}
+
+		posts.remove(post);
+		post.getAccount().getPosts().remove(post);
+
+		for (SocialMediaPost endorsedPost:post.getEndorsements()) {
+			deletePost(endorsedPost.getId());
+		}
+
+		String message = "The original content was removed from the system and is no longer available.";
+		SocialMediaPost genericPost = new SocialMediaPost(message);
+
+		for (SocialMediaPost comment:post.getComments()) {
+			comment.setParent(genericPost);
+		}
 	}
 
 	@Override
 	public String showIndividualPost(int id) throws PostIDNotRecognisedException {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuilder builder = new StringBuilder();
+		SocialMediaPost post = null;
+
+		for (SocialMediaPost currentPost:posts) {
+			if (currentPost.getId() == id) {
+				post = currentPost;
+			}
+		}
+
+		if (post == null) {
+			throw new PostIDNotRecognisedException();
+		}
+			
+		builder.append("ID: " + post.getId());
+		builder.append("Account: " + post.getAccount().getHandle());
+		builder.append("No. endorsements: " + post.getEndorsements().size() + "| No. comments: " + post.getComments().size());
+		builder.append(post.getMessage());
+		
+		return builder.toString();
 	}
 
 	@Override
 	public StringBuilder showPostChildrenDetails(int id)
 			throws PostIDNotRecognisedException, NotActionablePostException {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuilder builder = new StringBuilder();
+
+		return builder;
 	}
 
 	@Override
 	public int getMostEndorsedPost() {
-		// TODO Auto-generated method stub
-		return 0;
+		SocialMediaPost mostEndorsedPost = null;
+		for (SocialMediaPost post:posts) {
+			if (post.getEndorsements().size() > mostEndorsedPost.getEndorsements().size()) {
+				mostEndorsedPost = post;
+			}
+		}
+
+		return mostEndorsedPost.getId();
 	}
 
 	@Override
 	public int getMostEndorsedAccount() {
-		// TODO Auto-generated method stub
-		return 0;
+		SocialMediaAccount mostEndorsedAccount = null;
+		for (SocialMediaAccount account:accounts) {
+			if (account.getEndorsedPosts().size() > mostEndorsedAccount.getEndorsedPosts().size()) {
+				mostEndorsedAccount = account;
+			}
+		}
+
+		return mostEndorsedAccount.getId();
 	}
 
 	@Override
 	public void erasePlatform() {
-		// TODO Auto-generated method stub
+		accounts.clear();
+		posts.clear();
 
 	}
 
 	@Override
 	public void savePlatform(String filename) throws IOException {
-		// TODO Auto-generated method stub
-
+		FileOutputStream fos = new FileOutputStream(filename);
+    ObjectOutputStream oos = new ObjectOutputStream(fos);
+    oos.writeObject(this);
+    oos.close();
+    fos.close();
 	}
 
 	@Override
 	public void loadPlatform(String filename) throws IOException, ClassNotFoundException {
-		// TODO Auto-generated method stub
+		FileInputStream fis = new FileInputStream(filename);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		BadMiniSocialMedia badMiniSocialMedia = (BadMiniSocialMedia)ois.readObject();
+		this.accounts = badMiniSocialMedia.accounts;
+		this.posts = badMiniSocialMedia.posts;
 
+		ois.close();
+		fis.close();
 	}
 
 }
