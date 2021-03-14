@@ -12,7 +12,8 @@ import java.util.*;
  */
 public class SocialMedia implements SocialMediaPlatform {
 
-	private ArrayList<SocialMediaAccount> accounts = new ArrayList<SocialMediaAccount>();
+  private static final long serialVersionUID = -8546400894649906795L;
+  private ArrayList<SocialMediaAccount> accounts = new ArrayList<SocialMediaAccount>();
 	private ArrayList<SocialMediaPost> posts = new ArrayList<SocialMediaPost>();
 
 	@Override
