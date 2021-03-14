@@ -1,10 +1,12 @@
 package socialmedia;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class SocialMediaPost {
+public class SocialMediaPost implements Serializable {
 
-  private static int count = 0;
+  private static final long serialVersionUID = -5873021899913559358L;
+  private static int count = 1;
   private int id;
   private SocialMediaAccount account;
   private String message;
@@ -22,7 +24,8 @@ public class SocialMediaPost {
     this.message = message;
     this.endorsed = message.startsWith("EP@");
     this.parent = null;
-    this.id = ++count;
+    this.id = count++;
+
   }
 
   public SocialMediaPost(String message) {
@@ -30,7 +33,7 @@ public class SocialMediaPost {
     this.message = message;
     this.endorsed = message.startsWith("EP@");
     this.parent = null;
-    this.id = ++count;
+    this.id = count++;
   }
 
 

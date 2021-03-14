@@ -1,12 +1,15 @@
 package socialmedia;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class SocialMediaAccount {
+public class SocialMediaAccount implements Serializable {
   
-  private static int count = 0;
+  private static final long serialVersionUID = 3826223542991329844L;
+  private static int count = 1;
   private int id;
   private String handle;
+  private String description;
   private ArrayList<SocialMediaPost> posts =  new ArrayList<>();
   private ArrayList<SocialMediaPost> endorsedPosts =  new ArrayList<>();
 
@@ -16,8 +19,21 @@ public class SocialMediaAccount {
     }
 
     this.handle = handle;
-    this.id = ++count;
+    this.description = null;
+    this.id = count++;
   }
+
+  public SocialMediaAccount(String handle, String description) throws InvalidHandleException {
+    if (handle.length() > 30 || handle.isBlank() || handle.contains(" ")) {
+      throw new InvalidHandleException();
+    }
+
+    this.handle = handle;
+    this.description = description;
+    this.id = count++;
+  }
+
+
 
   public int getId() {
     return id;
@@ -25,6 +41,10 @@ public class SocialMediaAccount {
 
   public String getHandle() {
     return handle;
+  }
+
+  public String getDescription() {
+    return description;
   }
 
   public ArrayList<SocialMediaPost> getPosts() {
@@ -44,6 +64,10 @@ public class SocialMediaAccount {
       throw new InvalidHandleException();
     }
     this.handle = handle;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public void setPosts(ArrayList<SocialMediaPost> posts) {
