@@ -50,17 +50,24 @@ public class SocialMediaPlatformTestApp {
       platform.commentPost("youssef", postId, "replying to main post"); // youssef comments under the post
       platform.endorsePost("lucian", postId); // lucian endorses post
 
-      assert (platform.getTotalOriginalPosts() == 1) : "number of original posts in the system does not match.";
-		  assert (platform.getTotalCommentPosts() == 3) : "number of comments in the system does not match.";
-		  assert (platform.getTotalEndorsmentPosts() == 1) : "number of endorsement posts in the system does not match";
+			platform.deletePost(postId); // deleting the original post
+			platform.deletePost(commentId); // deleting a comment
+
+      assert (platform.getTotalOriginalPosts() == 0) : "number of original posts in the system does not match.";
+		  assert (platform.getTotalCommentPosts() == 2) : "number of comments in the system does not match.";
+		  assert (platform.getTotalEndorsmentPosts() == 0) : "number of endorsement posts in the system does not match";
       
-      platform.savePlatform("./test.ser");
-      platform.erasePlatform();
-      platform.loadPlatform("./test.ser");
+      platform.savePlatform("./test.ser"); // saving platform to file
+      platform.erasePlatform(); // erasing platform
+      platform.loadPlatform("./test.ser");  // loading platform from file
+
 			assert (platform.getNumberOfAccounts() == 2) : "number of accounts registered in the system does not match";
 
-      platform.removeAccount(id);
-      platform.removeAccount("lucian");
+      platform.removeAccount(id); // removing one account by id
+      platform.removeAccount("lucian"); // removing one account by handle
+
+			System.out.println(platform.showPostChildrenDetails(postId)); // showing the chain of comments
+
 			assert (platform.getNumberOfAccounts() == 0) : "number of accounts registered in the system does not match";
 		} catch (IllegalHandleException e) {
 			assert (false) : "IllegalHandleException thrown incorrectly";

@@ -18,58 +18,56 @@ public class SocialMedia implements SocialMediaPlatform {
 
   @Override
   public int createAccount(String handle) throws IllegalHandleException, InvalidHandleException {
-    if (!accounts.isEmpty()) {
-      for (SocialMediaAccount currentAccount:accounts) {
-        if (currentAccount.getHandle().equals(handle)) {
-          throw new IllegalHandleException();
-        }
-      }
+    SocialMediaAccount account = Helper.getAccount(handle, accounts);
+    
+    if (account != null) {
+      throw new IllegalHandleException();
     }
-
-    SocialMediaAccount account = new SocialMediaAccount(handle);
+      
+    account = new SocialMediaAccount(handle);
     accounts.add(account);
     return account.getId();
+
   }
 
   @Override
   public int createAccount(String handle, String description) throws IllegalHandleException, InvalidHandleException {
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getHandle().equals(handle)) {
-        throw new IllegalHandleException();
-      }
+    SocialMediaAccount account = Helper.getAccount(handle, accounts);
+    
+    if (account != null) {
+      throw new IllegalHandleException();
     }
-
-    SocialMediaAccount account = new SocialMediaAccount(handle, description);
+    
+    account = new SocialMediaAccount(handle, description);
     accounts.add(account);
     return account.getId();
   }
 
   @Override
   public void removeAccount(int id) throws AccountIDNotRecognisedException {
-    SocialMediaAccount account = null;
-
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getId() == id) {
-        account = currentAccount;
-      }
-    }
+    SocialMediaAccount account = Helper.getAccount(id, accounts);
 
     if (account == null) {
       throw new AccountIDNotRecognisedException();
     }
 
+    for (int i = 0; i < posts.size(); i++) {
+      try {
+        SocialMediaPost post = posts.get(i);
+        if (post.getAccount() != null && post.getAccount().equals(account)) {
+          deletePost(post.getId());
+        }
+      } catch (PostIDNotRecognisedException e) {
+        e.printStackTrace();
+      }
+    }
+    
     accounts.remove(account);
   }
 
   @Override
   public void removeAccount(String handle) throws HandleNotRecognisedException {
-    SocialMediaAccount account = null;
-
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getHandle().equals(handle)) {
-        account = currentAccount;
-      }
-    }
+    SocialMediaAccount account = Helper.getAccount(handle, accounts);
 
     if (account == null) {
       throw new HandleNotRecognisedException();
@@ -81,13 +79,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
   @Override
   public void changeAccountHandle(String oldHandle, String newHandle) throws HandleNotRecognisedException, IllegalHandleException, InvalidHandleException {
-    SocialMediaAccount account = null;
-
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getHandle().equals(oldHandle)) {
-        account = currentAccount;
-      }
-    }
+    SocialMediaAccount account = Helper.getAccount(oldHandle, accounts);
 
     if (account == null) {
       throw new HandleNotRecognisedException();
@@ -98,13 +90,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
   @Override
   public void updateAccountDescription(String handle, String description) throws HandleNotRecognisedException {
-    SocialMediaAccount account = null;
-
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getHandle().equals(handle)) {
-        account = currentAccount;
-      }
-    }
+    SocialMediaAccount account = Helper.getAccount(handle, accounts);
 
     if (account == null) {
       throw new HandleNotRecognisedException();
@@ -116,13 +102,7 @@ public class SocialMedia implements SocialMediaPlatform {
   @Override
   public String showAccount(String handle) throws HandleNotRecognisedException {
     StringBuilder builder = new StringBuilder();
-    SocialMediaAccount account = null;
-
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getHandle().equals(handle)) {
-        account = currentAccount;
-      }
-    }
+    SocialMediaAccount account = Helper.getAccount(handle, accounts);
 
     if (account == null) {
       throw new HandleNotRecognisedException();
@@ -139,13 +119,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
   @Override
   public int createPost(String handle, String message) throws HandleNotRecognisedException, InvalidPostException {
-    SocialMediaAccount account = null;
-
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getHandle().equals(handle)) {
-        account = currentAccount;
-      }
-    }
+    SocialMediaAccount account = Helper.getAccount(handle, accounts);
 
     if (account == null) {
       throw new HandleNotRecognisedException();
@@ -160,20 +134,9 @@ public class SocialMedia implements SocialMediaPlatform {
 
   @Override
   public int endorsePost(String handle, int id) throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException {
-    SocialMediaAccount account = null;
-    SocialMediaPost post = null;
-
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getHandle().equals(handle)) {
-        account = currentAccount;
-      }
-    }
-
-    for (SocialMediaPost currentPost:posts) {
-      if (currentPost.getId() == id) {
-        post = currentPost;
-      }
-    }
+    SocialMediaAccount account = Helper.getAccount(handle, accounts);
+    SocialMediaPost post = Helper.getPost(id, posts);
+    SocialMediaPost endorsedPost = null;
 
     if (account == null) {
       throw new HandleNotRecognisedException();
@@ -187,8 +150,18 @@ public class SocialMedia implements SocialMediaPlatform {
       throw new NotActionablePostException();
     }
 
+    for (SocialMediaPost endorsement:post.getEndorsements()) {
+      if (endorsement.getAccount() == account) {
+        throw new NotActionablePostException();
+      }
+    }
+
     String message = "EP@" + account.getHandle() + ": " + post.getMessage();
-    SocialMediaPost endorsedPost = new SocialMediaPost(message);
+    try {
+      endorsedPost = new SocialMediaPost(account, message);
+    } catch (InvalidPostException e) {
+      e.printStackTrace();
+    }
 
     post.getEndorsements().add(endorsedPost);
     posts.add(endorsedPost);
@@ -200,20 +173,8 @@ public class SocialMedia implements SocialMediaPlatform {
 
   @Override
   public int commentPost(String handle, int id, String message) throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException, InvalidPostException {
-    SocialMediaAccount account = null;
-    SocialMediaPost post = null;
-
-    for (SocialMediaAccount currentAccount:accounts) {
-      if (currentAccount.getHandle().equals(handle)) {
-        account = currentAccount;
-      }
-    }
-
-    for (SocialMediaPost currentPost:posts) {
-      if (currentPost.getId() == id) {
-        post = currentPost;
-      }
-    }
+    SocialMediaAccount account = Helper.getAccount(handle, accounts);
+    SocialMediaPost post = Helper.getPost(id, posts);
 
     if (account == null) {
       throw new HandleNotRecognisedException();
@@ -231,56 +192,45 @@ public class SocialMedia implements SocialMediaPlatform {
     posts.add(comment);
     post.getComments().add(comment);
     comment.setParent(post);
-
+    account.getPosts().add(comment);
     return comment.getId();
   }
 
   @Override
   public void deletePost(int id) throws PostIDNotRecognisedException {
-    SocialMediaPost post = null;
-
-    for (SocialMediaPost currentPost:posts) {
-      if (currentPost.getId() == id) {
-        post = currentPost;
-      }
-    }
+    SocialMediaPost post = Helper.getPost(id, posts);
 
     if (post == null) {
       throw new PostIDNotRecognisedException();
     }
 
-    posts.remove(post);
+    post.getEndorsements().clear();
     post.getAccount().getPosts().remove(post);
+
+    String message = "The original content was removed from the system and is no longer available.";
+    try {
+      post.setMessage(message);
+      post.setAccount(null);
+    } catch (InvalidPostException e) {
+      e.printStackTrace();
+    }
 
     for (SocialMediaPost endorsedPost:post.getEndorsements()) {
       deletePost(endorsedPost.getId());
-    }
-
-    String message = "The original content was removed from the system and is no longer available.";
-    SocialMediaPost genericPost = new SocialMediaPost(message);
-
-    for (SocialMediaPost comment:post.getComments()) {
-      comment.setParent(genericPost);
     }
   }
 
   @Override
   public String showIndividualPost(int id) throws PostIDNotRecognisedException {
     StringBuilder builder = new StringBuilder();
-    SocialMediaPost post = null;
-
-    for (SocialMediaPost currentPost:posts) {
-      if (currentPost.getId() == id) {
-        post = currentPost;
-      }
-    }
+    SocialMediaPost post = Helper.getPost(id, posts);
 
     if (post == null) {
       throw new PostIDNotRecognisedException();
     }
       
     builder.append("ID: " + post.getId() + "\n");
-    builder.append("Account: " + post.getAccount().getHandle() + "\n");
+    if (post.getAccount() != null) builder.append("Account: " + post.getAccount().getHandle() + "\n");
     builder.append("No. endorsements: " + post.getEndorsements().size() + " | No. comments: " + post.getComments().size() + "\n");
     builder.append(post.getMessage() + "\n");
     
@@ -290,13 +240,7 @@ public class SocialMedia implements SocialMediaPlatform {
   @Override
   public StringBuilder showPostChildrenDetails(int id) throws PostIDNotRecognisedException, NotActionablePostException {
     StringBuilder builder = new StringBuilder();
-    SocialMediaPost post = null;
-
-    for (SocialMediaPost currentPost:posts) {
-      if (currentPost.getId() == id) {
-        post = currentPost;
-      }
-    }
+    SocialMediaPost post = Helper.getPost(id, posts);
 
     if (post == null) {
       throw new PostIDNotRecognisedException();
@@ -329,7 +273,7 @@ public class SocialMedia implements SocialMediaPlatform {
   public int getTotalOriginalPosts() {
     int counter = 0;
     for (SocialMediaPost post:posts) {
-      if (Boolean.FALSE.equals(post.getEndorsed()) && post.getParent() == null) {
+      if (Boolean.FALSE.equals(post.getEndorsed()) && post.getParent() == null && post.getAccount() != null) {
         counter++;
       }
     }
@@ -340,7 +284,7 @@ public class SocialMedia implements SocialMediaPlatform {
   public int getTotalEndorsmentPosts() {
     int counter = 0;
     for (SocialMediaPost post:posts) {
-      if (Boolean.TRUE.equals(post.getEndorsed())) {
+      if (Boolean.TRUE.equals(post.getEndorsed()) && post.getAccount() != null) {
         counter++;
       }
     }
@@ -351,7 +295,7 @@ public class SocialMedia implements SocialMediaPlatform {
   public int getTotalCommentPosts() {
     int counter = 0;
     for (SocialMediaPost post:posts) {
-      if (post.getParent() != null) {
+      if (post.getParent() != null && post.getAccount() != null) {
         counter++;
       }
     }
@@ -386,7 +330,6 @@ public class SocialMedia implements SocialMediaPlatform {
   public void erasePlatform() {
     accounts.clear();
     posts.clear();
-
   }
 
   @Override
@@ -394,6 +337,7 @@ public class SocialMedia implements SocialMediaPlatform {
     FileOutputStream fos = new FileOutputStream(filename);
     ObjectOutputStream oos = new ObjectOutputStream(fos);
     oos.writeObject(this);
+    
     oos.close();
     fos.close();
   }
@@ -409,5 +353,4 @@ public class SocialMedia implements SocialMediaPlatform {
     ois.close();
     fis.close();
   }
-
 }
